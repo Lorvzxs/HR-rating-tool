@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMDO ASUNCION</title>
+    
+    <link rel="icon" type="image/png" href="hr.png">
+
+    <style>
+        :root { 
+            --sidebar-blue: #1e3a8a; 
+            --primary-blue: #2563eb; 
+            --bg-light: #f8fafc; 
+            --text-dark: #334155; 
+            --accent-blue: #60a5fa; 
+        }
+
+        ::selection { background-color: var(--primary-blue); color: white; }
+
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; background: var(--bg-light); overflow: hidden; }
+        
+        /* --- Top Header --- */
+        .jobsync-header {
+            background: white; height: 70px; display: flex; align-items: center;
+            justify-content: space-between; padding: 0 30px; border-bottom: 1px solid #e2e8f0; 
+            z-index: 10000; position: relative;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .menu-toggle { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; }
+        .js-brand { display: flex; align-items: center; gap: 12px; }
+        .js-brand img { width: 35px; height: auto; }
+        .js-brand-text h1 { margin: 0; font-size: 1.3rem; font-weight: 800; color: #1e3a8a; line-height: 1; }
+        .js-brand-text p { margin: 2px 0 0; font-size: 0.7rem; color: #64748b; font-weight: 500; }
+
+        .user-profile-top { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .avatar-small { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: #e2e8f0; }
+        .user-details-top { display: flex; flex-direction: column; align-items: flex-start; }
+        .user-name-top { font-size: 0.95rem; font-weight: 700; color: #1e293b; line-height: 1.2; }
+        .badge-administrator { background: #dbeafe; color: #2563eb; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+
+        /* --- Welcome Screen --- */
+        #welcome-screen {
+            position: fixed; top: 70px; left: 0; width: 100%; height: calc(100% - 70px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #1e3a8a; overflow: hidden;
+        }
+        #bg-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.35; z-index: -2; }
+        #welcome-screen::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('1.jpg'); background-size: cover; background-position: center; opacity: 0.25; z-index: -3; 
+        }
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.1); padding: 50px; border-radius: 40px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); max-width: 500px; width: 90%; text-align: center;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); margin: auto;
+        }
+        .welcome-card img { width: 180px; margin-bottom: 20px; }
+        .welcome-card h2 { font-size: 1.8rem; margin: 0 0 10px; color: #ffffff; font-weight: 800; }
+        .btn-get-started { background: #2563eb; color: white; border: none; padding: 15px 50px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 20px; }
+
+        /* --- Sidebar & Icons --- */
+        .app-container { display: flex; flex: 1; height: calc(100vh - 70px); overflow: hidden; }
+        .sidebar { width: 260px; background: var(--sidebar-blue); color: white; display: flex; flex-direction: column; transition: 0.3s ease; overflow-x: hidden; white-space: nowrap; }
+        .sidebar.collapsed { width: 80px; }
+        .sidebar.collapsed .menu-text, .sidebar.collapsed .sidebar-header-text { display: none; }
+        .sidebar.collapsed .menu-item { justify-content: center; padding: 18px 0; border-left: none; }
+        .menu-item { padding: 18px 25px; cursor: pointer; border-left: 4px solid transparent; color: rgba(255,255,255,0.7); transition: 0.2s; display: flex; align-items: center; gap: 15px; }
+        .menu-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .menu-item.active { background: #1e40af; border-left-color: #60a5fa; color: white; font-weight: bold; }
+        .menu-icon { width: 22px; height: 22px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; }
+
+        /* --- Layout Content --- */
+        .main-content { flex: 1; overflow-y: auto; padding: 40px; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        label { font-weight: 600; font-size: 0.8rem; display: block; margin-bottom: 8px; color: #64748b; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f1f5f9; padding: 15px; text-align: left; font-size: 0.8rem; color: #475569; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .avatar-wrapper { position: relative; width: 42px; height: 42px; flex-shrink: 0; }
+        .avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .status-dot { position: absolute; bottom: 2px; right: 2px; width: 10px; height: 10px; background: #22c55e; border: 2px solid white; border-radius: 50%; }
+
+        .total-banner { background: var(--sidebar-blue); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-top: 25px; }
+        .btn-save { width: 100%; background: #2563eb; color: white; border: none; padding: 18px; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .slide-up { transform: translateY(-120%); }
+    </style>
+</head>
+<body>
+
+    <header class="jobsync-header">
+        <div class="header-left">
+            <button id="menu-toggle-btn" class="menu-toggle" onclick="toggleSidebar()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <div id="full-logo-section" class="js-brand">
+                <img src="B LOGS.png" alt="Logo">
+                <div class="js-brand-text"><h1>Behavioral Event Rating Tool</h1><p>Municipality of Asuncion</p></div>
+            </div>
+        </div>
+        <div class="user-profile-top">
+            <img src="hr.png" alt="Profile" class="avatar-small">
+            <div class="user-details-top">
+                <span class="user-name-top">HRMO ASUNCION</span>
+                <span class="badge-administrator">Administrator</span>
+            </div>
+        </div>
+    </header>
+
+    <div id="welcome-screen">
+        <video autoplay muted loop id="bg-video"><source src="bg.mp4" type="video/mp4"></video>
+        <div class="welcome-card">
+            <img src="LOGO.png" style="width:180px;">
+            <h2>Behavioral Event Interview <br>Rating Tool</h2>
+            <button class="btn-get-started" onclick="startApp()">GET STARTED</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <aside id="main-sidebar" class="sidebar">
+            <div class="sidebar-header-text" style="padding: 25px; font-size: 0.7rem; opacity: 0.5;">Menu</div>
+            <div class="menu-item active" onclick="showPage('rating', this)">
+                <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"></path></svg><span class="menu-text">Rating Tool</span>
+            </div>
+            <div class="menu-item" onclick="showPage('analytics', this)">
+                <svg class="menu-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span class="menu-text">Records</span>
+            </div>
+            <div class="menu-item" onclick="showPage('users', this)">
+                <svg class="menu-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span class="menu-text">User Management</span>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="rating" class="page active">
+                <h1 style="color: #1e3a8a;"><b>Interview Assessment</b></h1>
+                <div class="card">
+                    <div class="grid">
+                        <div><label>Applicant Name</label><input type="text" id="name" placeholder="Full Name"></div>
+                        <div>
+                            <label>Position Applied For</label>
+                            <select id="pos" onchange="checkNewPosition(this.value)">
+                                <option value="">Select Position</option>
+                                <option value="HUMAN RESOURCE MANAGEMENT V">HUMAN RESOURCE MANAGEMENT V</option>
+                                <option value="Administrative Officer III">Administrative Officer III</option>
+                                <option value="Administrative Officer I">Administrative Officer I</option>
+                                <option value="Medical Officer IV">Medical Officer IV</option>
+                                <option value="Midwife II">Midwife II</option>
+                                <option value="ADD_NEW" style="color: #2563eb; font-weight: bold;">+ Add New Position...</option>
+                            </select>
+                        </div>
+                        <div><label>Interviewer Name</label><input type="text" id="int" placeholder="Type Interviewer Name" oninput="saveInterviewerName(this.value)"></div>
+                        <div><label>Date</label><input type="date" id="date"></div>
+                    </div>
+                    <table><thead><tr><th>Criteria</th><th style="width: 150px; text-align: center;">Score (1-5)</th></tr></thead><tbody id="rubric-body"></tbody></table>
+                    <div class="total-banner">FINAL RATING SCORE <span id="total-val" style="font-size: 2.5rem; font-weight: 800;">0</span></div>
+                    <button class="btn-save" id="saveBtn" onclick="submitData()">SUBMIT</button>
+                </div>
+            </div>
+            
+            <div id="analytics" class="page">
+                <h1 style="color: #1e3a8a;"><b>Records</b></h1>
+                <div class="card"><table><thead><tr><th>Applicant</th><th>Position</th><th>Interviewer</th><th>Score</th></tr></thead><tbody id="history-body"></tbody></table></div>
+            </div>
+
+            <div id="users" class="page">
+                <h1 style="color: #1e3a8a;"><b>User Management</b></h1>
+                <div class="card">
+                    <table>
+                        <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Last Active</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><div class="user-info"><div class="avatar-wrapper"><img src="lor.jpeg" class="avatar"><div class="status-dot"></div></div><div><strong>Lorvy Jun Esguera</strong><br><small style="color: #64748b;">lorvyesguera@gmail.com</small></div></div></td>
+                                <td><span style="background:#dbeafe; color:#1e40af; padding:4px 10px; border-radius:20px; font-size:0.7rem; font-weight:600;">Superuser</span></td>
+                                <td><span style="color:#16a34a; font-weight:600; font-size:0.8rem;">● Active</span></td>
+                                <td>Online</td>
+                            </tr>
+                            <tr>
+                                <td><div class="user-info"><div class="avatar-wrapper"><img src="hr.png" class="avatar"><div class="status-dot"></div></div><div><strong>HRMO ASUNCION</strong><br><small style="color: #64748b;">hrmolguasuncion@gmail.com</small></div></div></td>
+                                <td><span style="background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:20px; font-size:0.7rem; font-weight:600;">Administrator</span></td>
+                                <td><span style="color:#16a34a; font-weight:600; font-size:0.8rem;">● Active</span></td>
+                                <td>Online</td>
+                            </tr>
+                            <tr>
+                                <td><div class="user-info"><div class="avatar-wrapper"><img src="LOGO.png" class="avatar"><div class="status-dot"></div></div><div><strong>LGU ASUNCION</strong><br><small style="color: #64748b;">lguasuncionweb@gmail.com</small></div></div></td>
+                                <td><span style="background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:20px; font-size:0.7rem; font-weight:600;">Administrator</span></td>
+                                <td><span style="color:#16a34a; font-weight:600; font-size:0.8rem;">● Active</span></td>
+                                <td>Online</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbw0Y2MX8QjwezYWlYanHNDUa2IyIJUzAou6qKxNdq1-8Ma9w1dVwwLSzAAQz4D3sFMa/exec";
+    const criteria = [{ name: "Communication Skills", desc: "Communicates ideas clearly, confidently, and persuasively; listens attentively and responds logically." }, { name: "Job Knowledge / Technical Competence", desc: "Demonstrates comprehensive understanding of job functions, laws, and procedures; provides insightful answers with practical applications." }, { name: "Work Experience and Accomplishments", desc: "Experience highly relevant; cites specific, measurable accomplishments applicable to the role." }, { name: "Problem-Solving and Decision-Making", desc: "Analyzes complex problems logically; proposes sound, ethical, and innovative solutions consistent with public policy. " }, { name: "Commitment to Public Service and Ethical Standards", desc: "Demonstrates strong sense of integrity, accountability, and genuine desire to serve the public; clearly aligns with RA 6713 values." }, { name: "Interpersonal Relations and Teamwork", desc: "Demonstrates exceptional ability to work harmoniously; shows respect, empathy, and leadership in collaboration." }, { name: "Personality, Attitude, and Professional Demeanor", desc: "Displays high confidence, enthusiasm, and professionalism; poised and composed throughout." }];
+
+    function startApp() { document.getElementById('welcome-screen').classList.add('slide-up'); }
+    function toggleSidebar() { document.getElementById('main-sidebar').classList.toggle('collapsed'); }
+
+    function saveInterviewerName(name) { localStorage.setItem('saved_interviewer_name', name); }
+    function loadInterviewerName() {
+        const savedName = localStorage.getItem('saved_interviewer_name');
+        if (savedName) document.getElementById('int').value = savedName;
+    }
+
+    // FUNCTION PARA SA PAG-HANDLE SA DROPDOWN CHANGE
+    function checkNewPosition(val) {
+        if (val === "ADD_NEW") {
+            const newPos = prompt("Enter New Position Title:");
+            const select = document.getElementById('pos');
+            
+            if (newPos && newPos.trim() !== "") {
+                const cleanPos = newPos.trim();
+                
+                // I-insert ang bag-ong option BEFORE sa "Add New" option
+                const option = document.createElement('option');
+                option.value = cleanPos;
+                option.text = cleanPos;
+                select.add(option, select.options[select.options.length - 1]);
+                
+                select.value = cleanPos;
+                
+                // I-save sa LocalStorage para permanent
+                let customPositions = JSON.parse(localStorage.getItem('custom_positions')) || [];
+                customPositions.push(cleanPos);
+                localStorage.setItem('custom_positions', JSON.stringify(customPositions));
+            } else {
+                select.value = ""; // I-reset kung gi-cancel ang prompt
+            }
+        }
+    }
+
+    function loadCustomPositions() {
+        const customPositions = JSON.parse(localStorage.getItem('custom_positions')) || [];
+        const select = document.getElementById('pos');
+        // I-load ang mga saved positions BEFORE sa "Add New" button
+        customPositions.forEach(pos => {
+            const option = document.createElement('option');
+            option.value = pos;
+            option.text = pos;
+            select.add(option, select.options[select.options.length - 1]);
+        });
+    }
+
+    function showPage(id, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(el) el.classList.add('active');
+
+        const menuBtn = document.getElementById('menu-toggle-btn');
+        const fullLogo = document.getElementById('full-logo-section');
+        const sidebar = document.getElementById('main-sidebar');
+
+        menuBtn.style.display = 'flex'; 
+        if (id === 'rating') {
+            fullLogo.style.display = 'flex';
+            sidebar.classList.remove('collapsed');
+        } else {
+            fullLogo.style.display = 'none';
+        }
+        if(id === 'analytics') { updateRecordsTable(); }
+    }
+
+    function initRubric() {
+        document.getElementById('rubric-body').innerHTML = criteria.map((c, i) => `<tr><td><strong>${i+1}. ${c.name}</strong><br><small style="color: #94a3b8;">${c.desc}</small></td><td><select class="score" onchange="calc()"><option value="0">0</option>${[1,2,3,4,5].map(v => `<option value="${v}">${v}</option>`).join('')}</select></td></tr>`).join('');
+        document.getElementById('date').valueAsDate = new Date();
+    }
+
+    function calc() {
+        let total = 0;
+        document.querySelectorAll('.score').forEach(s => total += parseInt(s.value));
+        document.getElementById('total-val').innerText = total;
+    }
+
+    function updateRecordsTable() {
+        const d = JSON.parse(localStorage.getItem('my_local_ratings')) || [];
+        document.getElementById('history-body').innerHTML = d.reverse().map(r => `<tr><td>${r.name}</td><td>${r.pos}</td><td>${r.int}</td><td style="font-weight: bold; color: #2563eb;">${r.total}</td></tr>`).join('') || "<tr><td colspan='4' style='text-align:center;'>No records found.</td></tr>";
+    }
+
+    async function submitData() {
+        const scores = Array.from(document.querySelectorAll('.score')).map(s => parseInt(s.value));
+        const totalScore = parseInt(document.getElementById('total-val').innerText);
+        const averageScore = (totalScore / 7).toFixed(2);
+
+        const name = document.getElementById('name').value;
+        const pos = document.getElementById('pos').value;
+        const int = document.getElementById('int').value;
+
+        if(!name || !pos || !int) {
+            return alert("Please Complete the Information. Applicant, Position, and Interviewer.");
+        }
+
+        const hasZero = scores.some(s => s === 0);
+        if(hasZero) {
+            return alert("Scores should be between 1 and 5 for all criteria.");
+        }
+
+        const payload = { 
+            name: name, 
+            pos: pos, 
+            int: int, 
+            date: document.getElementById('date').value, 
+            c1: scores[0], 
+            c2: scores[1], 
+            c3: scores[2], 
+            c4: scores[3],
+            c5: scores[4], 
+            c6: scores[5], 
+            c7: scores[6],
+            total: totalScore,
+            average: averageScore
+        };
+
+        document.getElementById('saveBtn').innerText = "Syncing...";
+        let myRatings = JSON.parse(localStorage.getItem('my_local_ratings')) || [];
+        myRatings.push(payload);
+        localStorage.setItem('my_local_ratings', JSON.stringify(myRatings));
+        
+        fetch(SHEET_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload) 
+        });
+        
+        setTimeout(() => { 
+            alert("Success! Na-submit na ang rating."); 
+            document.getElementById('name').value = "";
+            document.getElementById('pos').value = "";
+            document.querySelectorAll('.score').forEach(s => s.value = 0);
+            document.getElementById('total-val').innerText = "0";
+            document.getElementById('saveBtn').innerText = "SUBMIT";
+        }, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initRubric();
+        loadInterviewerName();
+        loadCustomPositions(); // I-load ang mga gidugang nga position
+    });
+</script>
+</body>
+</html>
